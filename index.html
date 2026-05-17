@@ -6,17 +6,17 @@
     <title>Halftone Mosaic Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Import Geist & Geist Mono fonts from Google Fonts -->
+    <!-- Import Geist & Geist Mono fonts from Google Fonts (Weight 400 & 700) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@600&family=Geist:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&family=Geist:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
         body {
             background-color: #D6D1C7;
             color: #000000;
             font-family: 'Geist Mono', monospace;
-            font-weight: 600;
+            font-weight: 400;
         }
         
         /* Font rule exclusively for the main title */
@@ -27,116 +27,142 @@
         
         /* Styling standard inputs to match the monochrome look */
         input[type=range] {
-            accent-color: #ffffff;
+            accent-color: #000000;
         }
         input[type=checkbox] {
-            accent-color: #ffffff;
+            accent-color: #000000;
+        }
+        
+        /* Minimal color picker styling */
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 0.25rem;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center py-10 px-4">
+<body class="min-h-screen flex justify-center py-10 px-4 md:px-8 lg:px-12">
 
-    <div class="max-w-4xl w-full p-6 md:p-8">
+    <!-- 2-Column Layout Container -->
+    <div class="max-w-[1400px] w-full flex flex-col lg:flex-row gap-10 xl:gap-16 lg:items-stretch">
         
-        <div class="text-center mb-10">
-            <h1 class="text-4xl mb-3 font-geist-title tracking-tight">Mosaic Generator</h1>
-            <p class="text-sm opacity-80">Converts an image into a variable-size halftone mosaic.</p>
-        </div>
+        <!-- LEFT PANEL (Controls) -->
+        <div class="w-full lg:w-72 xl:w-80 flex-shrink-0 flex flex-col gap-5">
+            
+            <!-- Header -->
+            <div class="mb-4">
+                <h1 class="text-2xl mb-1 font-geist-title tracking-tight">Mosaic Generator</h1>
+                <p class="text-xs opacity-70">Converts an image into a variable-size halftone mosaic.</p>
+            </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <!-- File Upload -->
-            <div class="col-span-1 flex flex-col gap-2">
-                <label class="text-sm">Select an image:</label>
+            <div class="flex flex-col gap-1.5">
+                <label class="text-xs text-gray-800">Select an image:</label>
                 <input type="file" id="imageUpload" accept="image/*" 
-                       class="block w-full text-sm text-black
-                              file:mr-4 file:py-2 file:px-4
-                              file:rounded-full file:border-2 file:border-black
-                              file:text-sm file:font-bold
+                       class="block w-full text-xs text-black
+                              file:mr-3 file:py-2 file:px-3
+                              file:rounded file:border-0
+                              file:text-xs file:font-bold
                               file:bg-white file:text-black
                               hover:file:bg-gray-100 cursor-pointer transition-colors"/>
             </div>
 
             <!-- Dot Spacing -->
-            <div class="col-span-1 flex flex-col gap-2">
-                <label for="dotSize" class="text-sm flex justify-between items-center">
+            <div class="flex flex-col gap-1.5">
+                <label for="dotSize" class="text-xs flex justify-between items-center text-gray-800">
                     <span>Dot Spacing (Grid):</span>
-                    <span id="dotSizeVal" class="bg-white border-2 border-black px-2 py-0.5 rounded text-xs">12px</span>
+                    <span id="dotSizeVal" class="bg-white px-2 py-0.5 rounded text-xs shadow-sm">12px</span>
                 </label>
-                <input type="range" id="dotSize" min="4" max="40" value="12" class="w-full h-2 bg-black rounded-lg cursor-pointer">
+                <input type="range" id="dotSize" min="4" max="40" value="12" class="w-full h-1.5 bg-black/20 rounded-lg cursor-pointer">
             </div>
 
             <!-- Size Multiplier -->
-            <div class="col-span-1 flex flex-col gap-2">
-                <label for="dotScale" class="text-sm flex justify-between items-center">
+            <div class="flex flex-col gap-1.5">
+                <label for="dotScale" class="text-xs flex justify-between items-center text-gray-800">
                     <span>Size Multiplier:</span>
-                    <span id="dotScaleVal" class="bg-white border-2 border-black px-2 py-0.5 rounded text-xs">1.2</span>
+                    <span id="dotScaleVal" class="bg-white px-2 py-0.5 rounded text-xs shadow-sm">1.2</span>
                 </label>
-                <input type="range" id="dotScale" min="0.1" max="2.0" step="0.1" value="1.2" class="w-full h-2 bg-black rounded-lg cursor-pointer">
+                <input type="range" id="dotScale" min="0.1" max="2.0" step="0.1" value="1.2" class="w-full h-1.5 bg-black/20 rounded-lg cursor-pointer">
             </div>
-        </div>
 
-        <!-- Additional Options: Color & Shape -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <!-- HEX Color -->
-            <div class="col-span-1 flex flex-col gap-2">
-                <label for="colorInput" class="text-sm">Raster Color (HEX):</label>
-                <div class="flex items-center gap-3">
-                    <input type="color" id="colorPicker" value="#FFFFFF" class="w-10 h-10 rounded cursor-pointer bg-transparent border-0 p-0">
-                    <input type="text" id="colorInput" value="#FFFFFF" class="bg-white text-black border-2 border-black rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 focus:ring-offset-[#D6D1C7]">
+            <!-- Raster Color -->
+            <div class="flex flex-col gap-1.5">
+                <label for="colorInput" class="text-xs text-gray-800">Raster Color (HEX):</label>
+                <div class="flex items-center gap-2">
+                    <input type="color" id="colorPicker" value="#FFFFFF" class="w-8 h-8 rounded cursor-pointer bg-transparent border-0 p-0">
+                    <input type="text" id="colorInput" value="#FFFFFF" class="bg-white text-black text-sm rounded px-3 py-1.5 w-full focus:outline-none focus:ring-1 focus:ring-black shadow-sm">
+                </div>
+            </div>
+
+            <!-- Background Color (NEW) -->
+            <div class="flex flex-col gap-1.5">
+                <label for="bgColorInput" class="text-xs text-gray-800">Background Color (HEX):</label>
+                <div class="flex items-center gap-2">
+                    <input type="color" id="bgColorPicker" value="#000000" class="w-8 h-8 rounded cursor-pointer bg-transparent border-0 p-0">
+                    <input type="text" id="bgColorInput" value="#000000" class="bg-white text-black text-sm rounded px-3 py-1.5 w-full focus:outline-none focus:ring-1 focus:ring-black shadow-sm">
                 </div>
             </div>
 
             <!-- Raster Shape -->
-            <div class="col-span-1 flex flex-col gap-2">
-                <label for="shapeSelect" class="text-sm">Raster Shape:</label>
-                <select id="shapeSelect" class="bg-white text-black border-2 border-black rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 focus:ring-offset-[#D6D1C7] cursor-pointer">
+            <div class="flex flex-col gap-1.5">
+                <label for="shapeSelect" class="text-xs text-gray-800">Raster Shape:</label>
+                <select id="shapeSelect" class="bg-white text-black text-sm rounded px-3 py-2 w-full focus:outline-none focus:ring-1 focus:ring-black cursor-pointer shadow-sm border-0">
                     <option value="circle">Circle</option>
                     <option value="square">Square</option>
                 </select>
             </div>
-        </div>
 
-        <!-- Toggles -->
-        <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-8 mb-8">
-            <label class="flex items-center cursor-pointer gap-3 text-sm hover:opacity-70 transition-opacity">
-                <input type="checkbox" id="shadingToggle" checked class="w-5 h-5 cursor-pointer rounded border-2 border-black">
-                <span>Simulate Shading</span>
-            </label>
-            <label class="flex items-center cursor-pointer gap-3 text-sm hover:opacity-70 transition-opacity" title="Useful for black logos on transparent backgrounds">
-                <input type="checkbox" id="invertToggle" class="w-5 h-5 cursor-pointer rounded border-2 border-black">
-                <span>Invert Brightness</span>
-            </label>
-        </div>
+            <!-- Toggles -->
+            <div class="flex flex-col gap-3 mt-2">
+                <label class="flex items-center cursor-pointer gap-2.5 text-xs hover:opacity-70 transition-opacity">
+                    <input type="checkbox" id="shadingToggle" checked class="w-4 h-4 cursor-pointer rounded border-gray-400">
+                    <span>Simulate Shading</span>
+                </label>
+                <label class="flex items-center cursor-pointer gap-2.5 text-xs hover:opacity-70 transition-opacity" title="Useful for black logos on transparent backgrounds">
+                    <input type="checkbox" id="invertToggle" class="w-4 h-4 cursor-pointer rounded border-gray-400">
+                    <span>Invert Brightness</span>
+                </label>
+            </div>
 
-        <!-- Warning / Status Message -->
-        <div id="statusMessage" class="hidden mb-6 p-4 rounded-lg bg-white border-2 border-black text-sm text-center">
-            Processing image...
-        </div>
+            <!-- Warning / Status Message -->
+            <div id="statusMessage" class="hidden mt-2 p-3 rounded bg-white text-xs text-center shadow-sm">
+                Processing image...
+            </div>
 
-        <!-- Canvas Output -->
-        <div class="w-full flex justify-center bg-black rounded-lg overflow-hidden border-2 border-black relative">
-            <canvas id="outputCanvas" class="max-w-full h-auto object-contain" style="max-height: 70vh;"></canvas>
-            
-            <div id="placeholder" class="absolute inset-0 flex items-center justify-center flex-col text-gray-400 pointer-events-none">
-                <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                <p>Upload an image to see the effect</p>
+            <!-- Downloads -->
+            <div class="mt-4 flex flex-col gap-3">
+                <button id="downloadPngBtn" class="bg-white hover:bg-gray-50 text-black text-sm font-bold py-2.5 px-4 rounded shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Download PNG
+                </button>
+                <button id="downloadSvgBtn" class="bg-black hover:bg-gray-800 text-white text-sm font-bold py-2.5 px-4 rounded shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Download SVG
+                </button>
             </div>
         </div>
 
-        <!-- Downloads -->
-        <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-            <button id="downloadPngBtn" class="bg-white hover:bg-gray-100 text-black border-2 border-black font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                Download PNG
-            </button>
-            <button id="downloadSvgBtn" class="bg-white hover:bg-gray-100 text-black border-2 border-black font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                Download SVG (Vector)
-            </button>
+        <!-- RIGHT PANEL (Canvas Output) -->
+        <div class="flex-grow flex flex-col relative min-h-[60vh] lg:min-h-[calc(100vh-5rem)]">
+            <!-- Dynamic Background Container -->
+            <div id="canvasWrapper" class="w-full flex-grow flex items-center justify-center rounded-lg overflow-hidden relative shadow-md transition-colors duration-300" style="background-color: #000000;">
+                <canvas id="outputCanvas" class="max-w-full h-auto object-contain" style="max-height: 100%;"></canvas>
+                
+                <div id="placeholder" class="absolute inset-0 flex items-center justify-center flex-col text-gray-500 pointer-events-none mix-blend-difference">
+                    <svg class="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <p class="text-sm font-bold tracking-wide">Upload an image to see the effect</p>
+                </div>
+            </div>
         </div>
+
     </div>
 
     <script>
         const canvas = document.getElementById('outputCanvas');
         const ctx = canvas.getContext('2d');
+        const canvasWrapper = document.getElementById('canvasWrapper');
+        
+        // Input Elements
         const imageUpload = document.getElementById('imageUpload');
         const dotSizeInput = document.getElementById('dotSize');
         const dotScaleInput = document.getElementById('dotScale');
@@ -144,13 +170,19 @@
         const dotScaleVal = document.getElementById('dotScaleVal');
         const shadingToggle = document.getElementById('shadingToggle');
         const invertToggle = document.getElementById('invertToggle');
+        const shapeSelect = document.getElementById('shapeSelect');
+        
+        // Color Elements
+        const colorPicker = document.getElementById('colorPicker');
+        const colorInput = document.getElementById('colorInput');
+        const bgColorPicker = document.getElementById('bgColorPicker');
+        const bgColorInput = document.getElementById('bgColorInput');
+        
+        // Buttons & UI
         const downloadPngBtn = document.getElementById('downloadPngBtn');
         const downloadSvgBtn = document.getElementById('downloadSvgBtn');
         const placeholder = document.getElementById('placeholder');
         const statusMessage = document.getElementById('statusMessage');
-        const colorPicker = document.getElementById('colorPicker');
-        const colorInput = document.getElementById('colorInput');
-        const shapeSelect = document.getElementById('shapeSelect');
 
         let currentImage = null;
         let isProcessing = false;
@@ -161,8 +193,7 @@
         let currentCanvasHeight = 0;
 
         // Configuration limits
-        const BG_COLOR = '#000000'; // Output background color
-        const MAX_IMAGE_WIDTH = 1200;
+        const MAX_IMAGE_WIDTH = 1400;
 
         // Initialization: Attempt to load default image
         window.onload = () => {
@@ -218,7 +249,7 @@
         shadingToggle.addEventListener('change', triggerRender);
         invertToggle.addEventListener('change', triggerRender);
 
-        // Color Picker events
+        // --- RASTER COLOR EVENTS ---
         colorPicker.addEventListener('input', (e) => {
             colorInput.value = e.target.value.toUpperCase();
             triggerRender();
@@ -227,13 +258,30 @@
         colorInput.addEventListener('change', (e) => {
             let val = e.target.value;
             if (!val.startsWith('#')) val = '#' + val;
-            // Validate HEX
             if (/^#[0-9A-F]{6}$/i.test(val)) {
                 colorPicker.value = val;
                 triggerRender();
             } else {
-                // Revert if invalid
                 colorInput.value = colorPicker.value.toUpperCase();
+            }
+        });
+
+        // --- BACKGROUND COLOR EVENTS ---
+        bgColorPicker.addEventListener('input', (e) => {
+            bgColorInput.value = e.target.value.toUpperCase();
+            canvasWrapper.style.backgroundColor = bgColorInput.value;
+            triggerRender();
+        });
+        
+        bgColorInput.addEventListener('change', (e) => {
+            let val = e.target.value;
+            if (!val.startsWith('#')) val = '#' + val;
+            if (/^#[0-9A-F]{6}$/i.test(val)) {
+                bgColorPicker.value = val;
+                canvasWrapper.style.backgroundColor = val;
+                triggerRender();
+            } else {
+                bgColorInput.value = bgColorPicker.value.toUpperCase();
             }
         });
 
@@ -253,13 +301,15 @@
         downloadSvgBtn.addEventListener('click', () => {
             if (!currentImage || generatedShapes.length === 0) return;
             
+            const currentBgColor = bgColorInput.value;
+            const currentColor = colorInput.value;
+
             let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${currentCanvasWidth} ${currentCanvasHeight}" width="${currentCanvasWidth}" height="${currentCanvasHeight}">\n`;
             
             // Background
-            svgContent += `  <rect width="100%" height="100%" fill="${BG_COLOR}" />\n`;
+            svgContent += `  <rect width="100%" height="100%" fill="${currentBgColor}" />\n`;
             
             // Shapes
-            const currentColor = colorInput.value;
             for (const shape of generatedShapes) {
                 if (shape.type === 'circle') {
                     svgContent += `  <circle cx="${shape.cx.toFixed(2)}" cy="${shape.cy.toFixed(2)}" r="${shape.r.toFixed(2)}" fill="${currentColor}" />\n`;
@@ -306,6 +356,7 @@
                 const dotSize = parseInt(dotSizeInput.value);
                 const dotScale = parseFloat(dotScaleInput.value);
                 const currentColor = colorInput.value;
+                const currentBgColor = bgColorInput.value;
                 const currentShape = shapeSelect.value;
                 
                 // Clear previous shapes for SVG
@@ -328,7 +379,7 @@
                 currentCanvasHeight = height;
 
                 // Fill background
-                ctx.fillStyle = BG_COLOR;
+                ctx.fillStyle = currentBgColor;
                 ctx.fillRect(0, 0, width, height);
 
                 // Offscreen canvas for reading original pixels
