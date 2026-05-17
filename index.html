@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Halftone Mosaic Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Import Geist & Geist Mono fonts from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@600&family=Geist:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #D6D1C7;
+            color: #000000;
+            font-family: 'Geist Mono', monospace;
+            font-weight: 600;
+        }
+        
+        /* Font rule exclusively for the main title */
+        .font-geist-title {
+            font-family: 'Geist', sans-serif;
+            font-weight: 700;
+        }
+        
+        /* Styling standard inputs to match the monochrome look */
+        input[type=range] {
+            accent-color: #ffffff;
+        }
+        input[type=checkbox] {
+            accent-color: #ffffff;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-10 px-4">
+
+    <div class="max-w-4xl w-full p-6 md:p-8">
+        
+        <div class="text-center mb-10">
+            <h1 class="text-4xl mb-3 font-geist-title tracking-tight">Mosaic Generator</h1>
+            <p class="text-sm opacity-80">Converts an image into a variable-size halftone mosaic.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- File Upload -->
+            <div class="col-span-1 flex flex-col gap-2">
+                <label class="text-sm">Select an image:</label>
+                <input type="file" id="imageUpload" accept="image/*" 
+                       class="block w-full text-sm text-black
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded-full file:border-2 file:border-black
+                              file:text-sm file:font-bold
+                              file:bg-white file:text-black
+                              hover:file:bg-gray-100 cursor-pointer transition-colors"/>
+            </div>
+
+            <!-- Dot Spacing -->
+            <div class="col-span-1 flex flex-col gap-2">
+                <label for="dotSize" class="text-sm flex justify-between items-center">
+                    <span>Dot Spacing (Grid):</span>
+                    <span id="dotSizeVal" class="bg-white border-2 border-black px-2 py-0.5 rounded text-xs">12px</span>
+                </label>
+                <input type="range" id="dotSize" min="4" max="40" value="12" class="w-full h-2 bg-black rounded-lg cursor-pointer">
+            </div>
+
+            <!-- Size Multiplier -->
+            <div class="col-span-1 flex flex-col gap-2">
+                <label for="dotScale" class="text-sm flex justify-between items-center">
+                    <span>Size Multiplier:</span>
+                    <span id="dotScaleVal" class="bg-white border-2 border-black px-2 py-0.5 rounded text-xs">1.2</span>
+                </label>
+                <input type="range" id="dotScale" min="0.1" max="2.0" step="0.1" value="1.2" class="w-full h-2 bg-black rounded-lg cursor-pointer">
+            </div>
+        </div>
+
+        <!-- Additional Options: Color & Shape -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- HEX Color -->
+            <div class="col-span-1 flex flex-col gap-2">
+                <label for="colorInput" class="text-sm">Raster Color (HEX):</label>
+                <div class="flex items-center gap-3">
+                    <input type="color" id="colorPicker" value="#FFFFFF" class="w-10 h-10 rounded cursor-pointer bg-transparent border-0 p-0">
+                    <input type="text" id="colorInput" value="#FFFFFF" class="bg-white text-black border-2 border-black rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 focus:ring-offset-[#D6D1C7]">
+                </div>
+            </div>
+
+            <!-- Raster Shape -->
+            <div class="col-span-1 flex flex-col gap-2">
+                <label for="shapeSelect" class="text-sm">Raster Shape:</label>
+                <select id="shapeSelect" class="bg-white text-black border-2 border-black rounded px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 focus:ring-offset-[#D6D1C7] cursor-pointer">
+                    <option value="circle">Circle</option>
+                    <option value="square">Square</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Shading Toggle -->
+        <div class="flex justify-center mb-8">
+            <label class="flex items-center cursor-pointer gap-3 text-sm hover:opacity-70 transition-opacity">
+                <input type="checkbox" id="shadingToggle" checked class="w-5 h-5 cursor-pointer rounded border-2 border-black">
+                <span>Simulate Shading (variable sizes)</span>
+            </label>
+        </div>
+
+        <!-- Warning / Status Message -->
+        <div id="statusMessage" class="hidden mb-6 p-4 rounded-lg bg-white border-2 border-black text-sm text-center">
+            Processing image...
+        </div>
+
+        <!-- Canvas Output -->
+        <div class="w-full flex justify-center bg-black rounded-lg overflow-hidden border-2 border-black relative">
+            <canvas id="outputCanvas" class="max-w-full h-auto object-contain" style="max-height: 70vh;"></canvas>
+            
+            <div id="placeholder" class="absolute inset-0 flex items-center justify-center flex-col text-gray-400 pointer-events-none">
+                <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <p>Upload an image to see the effect</p>
+            </div>
+        </div>
+
+        <!-- Downloads -->
+        <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <button id="downloadPngBtn" class="bg-white hover:bg-gray-100 text-black border-2 border-black font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                Download PNG
+            </button>
+            <button id="downloadSvgBtn" class="bg-white hover:bg-gray-100 text-black border-2 border-black font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                Download SVG (Vector)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('outputCanvas');
+        const ctx = canvas.getContext('2d');
+        const imageUpload = document.getElementById('imageUpload');
+        const dotSizeInput = document.getElementById('dotSize');
+        const dotScaleInput = document.getElementById('dotScale');
+        const dotSizeVal = document.getElementById('dotSizeVal');
+        const dotScaleVal = document.getElementById('dotScaleVal');
+        const shadingToggle = document.getElementById('shadingToggle');
+        const downloadPngBtn = document.getElementById('downloadPngBtn');
+        const downloadSvgBtn = document.getElementById('downloadSvgBtn');
+        const placeholder = document.getElementById('placeholder');
+        const statusMessage = document.getElementById('statusMessage');
+        const colorPicker = document.getElementById('colorPicker');
+        const colorInput = document.getElementById('colorInput');
+        const shapeSelect = document.getElementById('shapeSelect');
+
+        let currentImage = null;
+        let isProcessing = false;
+        
+        // Data for SVG generation
+        let generatedShapes = [];
+        let currentCanvasWidth = 0;
+        let currentCanvasHeight = 0;
+
+        // Configuration limits
+        const BG_COLOR = '#000000'; // Output background color
+        const MAX_IMAGE_WIDTH = 1200;
+
+        // Initialization: Attempt to load default image
+        window.onload = () => {
+            const defaultImg = new Image();
+            defaultImg.crossOrigin = "Anonymous";
+            defaultImg.onload = () => {
+                currentImage = defaultImg;
+                renderHalftone();
+            };
+            defaultImg.onerror = () => {
+                console.log("Waiting for manual image upload.");
+            };
+            defaultImg.src = "image_36f2ff.png"; 
+        };
+
+        // Handle manual file upload
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    currentImage = img;
+                    renderHalftone();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Sliders events
+        dotSizeInput.addEventListener('input', (e) => {
+            dotSizeVal.textContent = `${e.target.value}px`;
+        });
+        
+        dotScaleInput.addEventListener('input', (e) => {
+            dotScaleVal.textContent = e.target.value;
+        });
+
+        // Debounce render to improve UI performance during slider drag
+        let debounceTimer;
+        const triggerRender = () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                if(currentImage) renderHalftone();
+            }, 100);
+        };
+
+        dotSizeInput.addEventListener('change', triggerRender);
+        dotScaleInput.addEventListener('change', triggerRender);
+        shadingToggle.addEventListener('change', triggerRender);
+
+        // Color Picker events
+        colorPicker.addEventListener('input', (e) => {
+            colorInput.value = e.target.value.toUpperCase();
+            triggerRender();
+        });
+        
+        colorInput.addEventListener('change', (e) => {
+            let val = e.target.value;
+            if (!val.startsWith('#')) val = '#' + val;
+            // Validate HEX
+            if (/^#[0-9A-F]{6}$/i.test(val)) {
+                colorPicker.value = val;
+                triggerRender();
+            } else {
+                // Revert if invalid
+                colorInput.value = colorPicker.value.toUpperCase();
+            }
+        });
+
+        // Shape select event
+        shapeSelect.addEventListener('change', triggerRender);
+
+        // Handle PNG Download
+        downloadPngBtn.addEventListener('click', () => {
+            if (!currentImage) return;
+            const link = document.createElement('a');
+            link.download = 'mosaic_halftone.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+
+        // Handle SVG Download
+        downloadSvgBtn.addEventListener('click', () => {
+            if (!currentImage || generatedShapes.length === 0) return;
+            
+            let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${currentCanvasWidth} ${currentCanvasHeight}" width="${currentCanvasWidth}" height="${currentCanvasHeight}">\n`;
+            
+            // Background
+            svgContent += `  <rect width="100%" height="100%" fill="${BG_COLOR}" />\n`;
+            
+            // Shapes
+            const currentColor = colorInput.value;
+            for (const shape of generatedShapes) {
+                if (shape.type === 'circle') {
+                    svgContent += `  <circle cx="${shape.cx.toFixed(2)}" cy="${shape.cy.toFixed(2)}" r="${shape.r.toFixed(2)}" fill="${currentColor}" />\n`;
+                } else if (shape.type === 'square') {
+                    const x = (shape.cx - shape.r).toFixed(2);
+                    const y = (shape.cy - shape.r).toFixed(2);
+                    const size = (shape.size).toFixed(2);
+                    svgContent += `  <rect x="${x}" y="${y}" width="${size}" height="${size}" fill="${currentColor}" />\n`;
+                }
+            }
+            svgContent += `</svg>`;
+
+            const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'mosaic_vector.svg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+
+        function showStatus(text) {
+            statusMessage.textContent = text;
+            statusMessage.classList.remove('hidden');
+        }
+
+        function hideStatus() {
+            statusMessage.classList.add('hidden');
+        }
+
+        // Main rendering engine
+        function renderHalftone() {
+            if (!currentImage || isProcessing) return;
+            isProcessing = true;
+            placeholder.classList.add('hidden');
+            downloadPngBtn.disabled = true;
+            downloadSvgBtn.disabled = true;
+            showStatus("Processing pixels, please wait...");
+
+            // Small timeout to allow browser to render the status message
+            setTimeout(() => {
+                const dotSize = parseInt(dotSizeInput.value);
+                const dotScale = parseFloat(dotScaleInput.value);
+                const currentColor = colorInput.value;
+                const currentShape = shapeSelect.value;
+                
+                // Clear previous shapes for SVG
+                generatedShapes = [];
+
+                // Scale down huge images to prevent browser freezing
+                let width = currentImage.width;
+                let height = currentImage.height;
+
+                if (width > MAX_IMAGE_WIDTH) {
+                    const ratio = MAX_IMAGE_WIDTH / width;
+                    width = MAX_IMAGE_WIDTH;
+                    height = height * ratio;
+                }
+
+                // Prepare output canvas
+                canvas.width = width;
+                canvas.height = height;
+                currentCanvasWidth = width;
+                currentCanvasHeight = height;
+
+                // Fill background
+                ctx.fillStyle = BG_COLOR;
+                ctx.fillRect(0, 0, width, height);
+
+                // Offscreen canvas for reading original pixels
+                const offCanvas = document.createElement('canvas');
+                offCanvas.width = width;
+                offCanvas.height = height;
+                const offCtx = offCanvas.getContext('2d', { willReadFrequently: true });
+                
+                offCtx.drawImage(currentImage, 0, 0, width, height);
+                const imageData = offCtx.getImageData(0, 0, width, height).data;
+
+                ctx.fillStyle = currentColor;
+
+                // Iterate through the grid
+                for (let y = 0; y < height; y += dotSize) {
+                    for (let x = 0; x < width; x += dotSize) {
+                        
+                        let r = 0, g = 0, b = 0, a = 0;
+                        let count = 0;
+
+                        // Calculate average color for the dotSize x dotSize block
+                        for (let cy = 0; cy < dotSize; cy++) {
+                            for (let cx = 0; cx < dotSize; cx++) {
+                                const py = y + cy;
+                                const px = x + cx;
+                                
+                                if (py < height && px < width) {
+                                    const index = (py * width + px) * 4;
+                                    r += imageData[index];
+                                    g += imageData[index + 1];
+                                    b += imageData[index + 2];
+                                    a += imageData[index + 3];
+                                    count++;
+                                }
+                            }
+                        }
+
+                        if (count === 0) continue;
+
+                        const avgA = a / count;
+                        if (avgA < 10) continue; // Ignore highly transparent areas
+
+                        const avgR = r / count;
+                        const avgG = g / count;
+                        const avgB = b / count;
+
+                        // Calculate luminance (brightness)
+                        const brightness = (0.299 * avgR) + (0.587 * avgG) + (0.114 * avgB);
+                        const normalizedBrightness = brightness / 255;
+                        
+                        const maxRadius = (dotSize / 2) * dotScale;
+                        const useShading = shadingToggle.checked;
+
+                        if (useShading) {
+                            const radius = maxRadius * normalizedBrightness;
+
+                            // Optimization: skip drawing near-invisible shapes
+                            if (radius > 0.5) {
+                                const cx = x + dotSize / 2;
+                                const cy = y + dotSize / 2;
+                                ctx.beginPath();
+                                if (currentShape === 'circle') {
+                                    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                                } else {
+                                    ctx.rect(cx - radius, cy - radius, radius * 2, radius * 2);
+                                }
+                                ctx.fill();
+                                generatedShapes.push({ type: currentShape, cx: cx, cy: cy, r: radius, size: radius * 2 });
+                            }
+                        } else {
+                            // Dithering application (4x4 Bayer Matrix) for constant size shapes
+                            const bayerMatrix = [
+                                [ 0,  8,  2, 10],
+                                [12,  4, 14,  6],
+                                [ 3, 11,  1,  9],
+                                [15,  7, 13,  5]
+                            ];
+                            
+                            const gridX = Math.floor(x / dotSize);
+                            const gridY = Math.floor(y / dotSize);
+                            const bayerThreshold = (bayerMatrix[gridY % 4][gridX % 4] + 0.5) / 16;
+
+                            if (normalizedBrightness > bayerThreshold) {
+                                const cx = x + dotSize / 2;
+                                const cy = y + dotSize / 2;
+                                ctx.beginPath();
+                                if (currentShape === 'circle') {
+                                    ctx.arc(cx, cy, maxRadius, 0, Math.PI * 2);
+                                } else {
+                                    ctx.rect(cx - maxRadius, cy - maxRadius, maxRadius * 2, maxRadius * 2);
+                                }
+                                ctx.fill();
+                                generatedShapes.push({ type: currentShape, cx: cx, cy: cy, r: maxRadius, size: maxRadius * 2 });
+                            }
+                        }
+                    }
+                }
+
+                hideStatus();
+                downloadPngBtn.disabled = false;
+                downloadSvgBtn.disabled = false;
+                isProcessing = false;
+            }, 50);
+        }
+    </script>
+</body>
+</html>
