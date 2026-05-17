@@ -96,11 +96,15 @@
             </div>
         </div>
 
-        <!-- Shading Toggle -->
-        <div class="flex justify-center mb-8">
+        <!-- Toggles -->
+        <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-8 mb-8">
             <label class="flex items-center cursor-pointer gap-3 text-sm hover:opacity-70 transition-opacity">
                 <input type="checkbox" id="shadingToggle" checked class="w-5 h-5 cursor-pointer rounded border-2 border-black">
-                <span>Simulate Shading (variable sizes)</span>
+                <span>Simulate Shading</span>
+            </label>
+            <label class="flex items-center cursor-pointer gap-3 text-sm hover:opacity-70 transition-opacity" title="Useful for black logos on transparent backgrounds">
+                <input type="checkbox" id="invertToggle" class="w-5 h-5 cursor-pointer rounded border-2 border-black">
+                <span>Invert Brightness</span>
             </label>
         </div>
 
@@ -139,6 +143,7 @@
         const dotSizeVal = document.getElementById('dotSizeVal');
         const dotScaleVal = document.getElementById('dotScaleVal');
         const shadingToggle = document.getElementById('shadingToggle');
+        const invertToggle = document.getElementById('invertToggle');
         const downloadPngBtn = document.getElementById('downloadPngBtn');
         const downloadSvgBtn = document.getElementById('downloadSvgBtn');
         const placeholder = document.getElementById('placeholder');
@@ -211,6 +216,7 @@
         dotSizeInput.addEventListener('change', triggerRender);
         dotScaleInput.addEventListener('change', triggerRender);
         shadingToggle.addEventListener('change', triggerRender);
+        invertToggle.addEventListener('change', triggerRender);
 
         // Color Picker events
         colorPicker.addEventListener('input', (e) => {
@@ -371,7 +377,12 @@
 
                         // Calculate luminance (brightness)
                         const brightness = (0.299 * avgR) + (0.587 * avgG) + (0.114 * avgB);
-                        const normalizedBrightness = brightness / 255;
+                        let normalizedBrightness = brightness / 255;
+                        
+                        // Invert brightness if the user toggled the option
+                        if (invertToggle.checked) {
+                            normalizedBrightness = 1.0 - normalizedBrightness;
+                        }
                         
                         const maxRadius = (dotSize / 2) * dotScale;
                         const useShading = shadingToggle.checked;
